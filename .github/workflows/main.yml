@@ -1,31 +1,29 @@
 name: DevSecOps Pipeline
 
-# කවද්ද මේක වැඩ කරන්න ඕන? (Main එකට Push කළාම)
 on:
   push:
     branches: [ "main" ]
 
 jobs:
-  build-and-test:
+  security-check:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. අපේ Code එක GitHub Server එකට ගන්නවා
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # 2. Python Setup කරනවා
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
-    # 3. අපේ Libraries Install කරනවා
     - name: Install Dependencies
       run: |
+        pip install bandit
         pip install -r requirements.txt
 
-    # 4. නිකන්ම Test එකක් දුවලා බලනවා (Code එක වැඩද කියලා)
-    - name: Run Simple Test
+    # මෙන්න අපේ ආරක්ෂක පරීක්ෂණය
+    - name: Run Bandit Security Scan
       run: |
-        python -c "print('Test Passed: Code is valid python!')"
+        # -r (recursive), -ll (severity level medium)
+        bandit -r . -ll
