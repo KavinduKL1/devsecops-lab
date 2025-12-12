@@ -12,9 +12,3 @@ print("Container is active and waiting... (Press Ctrl+C to stop)")
 # මේකෙන් කියන්නේ වැඩේ ඉවර වුනාට පස්සේ නවතින්නේ නැතුව පැයක් (3600 sec) ඉන්න කියලා.
 # එතකොට අපිට පුළුවන් අනිත් පැත්තෙන් ඇතුලට රිංගන්න.
 time.sleep(3600)
-# WARNING: This is bad code for testing!
-def db_connect():
-    password = "admin_password_123"  # <-- Bandit මේක අල්ලන්න ඕන
-    print(f"Connecting with {password}")
-
-db_connect()
