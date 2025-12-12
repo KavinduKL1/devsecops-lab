@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  my-redis-db:
+    image: redis
+    container_name: my-redis
+    volumes:
+      - ./redis-data:/data    # <-- මේක තමයි අලුත් කෑල්ල!
+    networks:
+      - lakshan-net
+
+  my-python-app:
+    build: .
+    networks:
+      - lakshan-net
+    depends_on:
+      - my-redis-db
+
+networks:
+  lakshan-net:
