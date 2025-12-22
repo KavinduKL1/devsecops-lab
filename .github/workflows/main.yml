@@ -35,13 +35,13 @@ jobs:
     - name: Build Docker Image
       run: docker build -t my-secure-app:${{ github.sha }} .
 
-    # 6. Trivy Image Scan (Container Security) - මෙන්න අලුත් කොටස!
+# 6. Trivy Image Scan (Strict Mode)
     - name: Run Trivy Vulnerability Scanner
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: 'my-secure-app:${{ github.sha }}'
         format: 'table'
-        exit-code: '1' # වැරදි අහු වුනොත් Pipeline එක නවත්වන්න (Fail)
-        ignore-unfixed: true
+        exit-code: '1'
+        ignore-unfixed: false  # <--- විසඳුම් නැති ඒවත් අල්ලන්න
         vuln-type: 'os,library'
-        severity: 'CRITICAL,HIGH' # භයානකම ඒවා විතරක් බලන්න
+        severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' # <--- හැම එකම අල්ලන්න
