@@ -5,25 +5,43 @@ on:
     branches: [ "main" ]
 
 jobs:
-  security-check:
+  build-and-secure:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Code එක ගන්නවා
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    # 2. Python Setup කරනවා
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
+    # 3. Dependencies Install කරනවා
     - name: Install Dependencies
       run: |
         pip install bandit
         pip install -r requirements.txt
 
-    # මෙන්න අපේ ආරක්ෂක පරීක්ෂණය
+    # 4. Bandit Scan (SAST) - Code එකේ වැරදි බලනවා
     - name: Run Bandit Security Scan
       run: |
-        # -r (recursive), -ll (severity level medium)
         bandit -r .
+
+    # 5. Docker Image එක හදනවා (Build)
+    # Trivy වලට Scan කරන්න නම් Image එකක් තියෙන්න ඕනනේ.
+    - name: Build Docker Image
+      run: docker build -t my-secure-app:${{ github.sha }} .
+
+    # 6. Trivy Image Scan (Container Security) - මෙන්න අලුත් කොටස!
+    - name: Run Trivy Vulnerability Scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'my-secure-app:${{ github.sha }}'
+        format: 'table'
+        exit-code: '1' # වැරදි අහු වුනොත් Pipeline එක නවත්වන්න (Fail)
+        ignore-unfixed: true
+        vuln-type: 'os,library'
+        severity: 'CRITICAL,HIGH' # භයානකම ඒවා විතරක් බලන්න
