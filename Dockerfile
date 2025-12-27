@@ -1,16 +1,14 @@
-# Alpine වෙනුවට අපි දන්නා හඳුනන Slim එක ගමු (මේක Crash වෙන්නේ නෑ)
+# 1. Slim Version එක පාවිච්චි කරමු (මේක Crash වෙන්නේ නෑ)
 FROM python:3.9-slim
 
+# 2. වැඩ කරන තැන හදමු
 WORKDIR /app
 
+# 3. ෆයිල් ටික දාමු
 COPY . /app
 
-# Dependencies දාමු
-RUN pip install --no-cache-dir -r requirements.txt
+# 4. අවශ්‍ය දේවල් දාමු
+RUN pip install --no-cache-dir flask bandit
 
-# පොඩි User කෙනෙක් හදමු (Security)
-RUN useradd -m appuser
-USER appuser
-
-# App එක Run කරමු
+# 5. App එක Run කරමු
 CMD ["python", "app.py"]
