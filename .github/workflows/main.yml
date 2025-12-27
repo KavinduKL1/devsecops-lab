@@ -52,10 +52,11 @@ jobs:
         docker run -d --name test-app -p 5000:5000 my-secure-app:${{ github.sha }}
         sleep 10  # App එක Start වෙනකම් තත්පර 10ක් ඉමු
 
-    # 8. OWASP ZAP Scan (DAST) - Hacker කෙනෙක් වගේ පහර දෙමු!
+# 8. OWASP ZAP Scan (DAST) - Hacker කෙනෙක් වගේ ඇප් එකට පහර දීලා බලනවා
     - name: OWASP ZAP Baseline Scan
-      uses: zaproxy/action-baseline@v0.7.0
+      uses: zaproxy/action-baseline@v0.9.0
       with:
         target: 'http://localhost:5000'
-        allow_issue_writing: false  # GitHub Issues හදන්න එපා (Permission Errors නවත්වන්න)
-        fail_action: false          # වැරදි අහු වුනාට Fail කරන්න එපා (Report එක බලන්න ඕන නිසා)
+        docker_name: 'zaproxy/zap-stable'  # <--- මෙන්න විසඳුම! (අලුත් Image නම මෙතන දුන්නා)
+        allow_issue_writing: false  # GitHub Issues හදන්න එපා (Permission Error එන නිසා)
+        fail_action: false          # වැරදි අහු වුනාට Fail කරන්න එපා (Report එක විතරක් ඕන නිසා)
