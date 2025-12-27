@@ -1,14 +1,11 @@
-import redis
-import os
-import time  # <--- අලුත් කෑල්ල
+from flask import Flask
 
-r = redis.Redis(host='my-redis', port=6379, decode_responses=True)
+app = Flask(__name__)
 
-count = r.incr('hits')
+@app.route('/')
+def home():
+    return "Hello, DevSecOps!"
 
-print(f"Hello Lakshan! You have accessed this Server {count} times.")
-print("Container is active and waiting... (Press Ctrl+C to stop)")
-
-# මේකෙන් කියන්නේ වැඩේ ඉවර වුනාට පස්සේ නවතින්නේ නැතුව පැයක් (3600 sec) ඉන්න කියලා.
-# එතකොට අපිට පුළුවන් අනිත් පැත්තෙන් ඇතුලට රිංගන්න.
-time.sleep(3600)
+if __name__ == '__main__':
+    # host='0.0.0.0' කියන්නේ ඕනම කෙනෙක්ට එන්න දොර අරින්න කියන එකයි
+    app.run(debug=True, host='0.0.0.0', port=5000)
