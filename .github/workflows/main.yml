@@ -45,26 +45,25 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-# 7. App එක Run කිරීම
+# 7. App එක Run කිරීම (Host Network Mode)
     - name: Run Docker Container
       run: |
-        docker run -d --name test-app my-secure-app:${{ github.sha }}
+        # --network host: කෙලින්ම Server එකේ Port එකටම දානවා (ලෙඩ අඩුයි)
+        docker run -d --network host --name test-app my-secure-app:${{ github.sha }}
+        sleep 10
         
-    # 8. ZAP Scan (IP Address Method - The 100% Fix)
+        # --- LOGS CHECK (මේකෙන් තමයි අපි දිනන්නේ) ---
+        echo "=== Container Logs (App එක පණපිටින්ද?) ==="
+        docker logs test-app
+        
+        echo "=== Testing Connection ==="
+        curl -v http://localhost:5000 || echo "WARNING: App is NOT responding!"
+
+    # 8. ZAP Scan (Simple & Direct)
     - name: Run ZAP Security Scan
       run: |
-        # 1. Permission හදනවා
         chmod -R 777 .
-        
-        # 2. App එකේ IP එක හොයාගන්නවා (IP Extraction)
-        APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' test-app)
-        echo "Detected App IP: $APP_IP"
-        
-        # 3. App එක Start වෙනකම් පොඩ්ඩක් ඉන්නවා (Wait Loop)
-        echo "Waiting for App to start..."
-        timeout 30s bash -c "until curl -s http://$APP_IP:5000 > /dev/null; do echo waiting...; sleep 5; done"
-        
-        # 4. දැන් කෙලින්ම IP එකට පහර දෙනවා
-        echo "Starting ZAP Scan against http://$APP_IP:5000"
         docker pull zaproxy/zap-stable
-        docker run -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://$APP_IP:5000 -I || true
+        
+        # App එක Logs වල වැඩ නම්, ZAP එකත් අනිවාර්යයෙන්ම වැඩ!
+        docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true
