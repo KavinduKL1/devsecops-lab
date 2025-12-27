@@ -43,19 +43,23 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-    # 7. App එක Run කිරීම (Host Network එකේ)
-    # --network host: මේකෙන් කෙලින්ම Server එකේ Port එකටම App එක දානවා.
+# 7. App එක Run කිරීම (Host Network + Port Mapping)
     - name: Run Docker Container
       run: |
+        # -p 5000:5000 දාන්නේ එළියට පේන්න (Just in case)
+        # --network host දාන්නේ ZAP එකට ලේසියෙන් අල්ලගන්න
         docker run -d --network host --name test-app my-secure-app:${{ github.sha }}
-        sleep 20 
+        sleep 10
+        
+        # App එක ඇත්තටම වැඩද කියලා බලන්න පොඩි Check එකක්
+        docker ps
+        docker logs test-app
 
-    # 8. ZAP Scan (Host Network එකේ)
-    # දැන් ZAP එකටත් 'localhost' පේනවා (මොකද දෙන්නම ඉන්නේ host network එකේ)
+    # 8. ZAP Scan (Simple & Direct)
     - name: Run ZAP Security Scan
       run: |
         chmod -R 777 .
         docker pull zaproxy/zap-stable
         
-        # Target: http://localhost:5000 (දැන් මේක අනිවාර්යයෙන්ම වැඩ කරනවා)
+        # කෙලින්ම localhost:5000 ට ගහනවා
         docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true

@@ -1,21 +1,15 @@
-# Alpine කියන ආරක්ෂිත Base Image එක පාවිච්චි කරමු
-FROM python:3.9-alpine
+# Alpine වෙනුවට අපි දන්නා හඳුනන Slim එක ගමු (මේක Crash වෙන්නේ නෑ)
+FROM python:3.9-slim
 
-# වැඩ කරන ෆෝල්ඩර් එක හදමු
 WORKDIR /app
 
-# ෆයිල් ටික Copy කරමු
 COPY . /app
 
-# Python කෑලි Install කරමු
-# (--no-cache-dir දාන්නේ Image එකේ සයිස් එක අඩු කරන්න)
+# Dependencies දාමු
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ආරක්ෂාවට Root නැති පොඩි User කෙනෙක් හදමු
-# (Alpine වල useradd වෙනුවට පාවිච්චි වෙන්නේ adduser -D)
-RUN adduser -D appuser
-
-# ඒ User ට මාරු වෙමු
+# පොඩි User කෙනෙක් හදමු (Security)
+RUN useradd -m appuser
 USER appuser
 
 # App එක Run කරමු
