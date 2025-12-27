@@ -43,26 +43,19 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-    # 7. Docker Network එක හදනවා
-    - name: Create Docker Network
-      run: docker network create devsecops-net
-
-    # 8. App එක Run කරනවා
+    # 7. App එක Run කිරීම (Host Network එකේ)
+    # --network host: මේකෙන් කෙලින්ම Server එකේ Port එකටම App එක දානවා.
     - name: Run Docker Container
       run: |
-        docker run -d --network devsecops-net --name test-app my-secure-app:${{ github.sha }}
-        sleep 20
+        docker run -d --network host --name test-app my-secure-app:${{ github.sha }}
+        sleep 20 
 
-    # 9. ZAP Scan (Direct IP Attack Method)
-    # නම (DNS) වැඩ නැති නිසා අපි කෙලින්ම IP එක හොයාගෙන ගහනවා.
+    # 8. ZAP Scan (Host Network එකේ)
+    # දැන් ZAP එකටත් 'localhost' පේනවා (මොකද දෙන්නම ඉන්නේ host network එකේ)
     - name: Run ZAP Security Scan
       run: |
         chmod -R 777 .
         docker pull zaproxy/zap-stable
         
-        # App එකේ IP ලිපිනය හොයාගන්නවා (IP Extraction)
-        APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' test-app)
-        echo "Scanning Target IP: $APP_IP"
-        
-        # ඒ IP එකට Scan කරනවා
-        docker run --network devsecops-net -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://$APP_IP:5000 -I || true
+        # Target: http://localhost:5000 (දැන් මේක අනිවාර්යයෙන්ම වැඩ කරනවා)
+        docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true
