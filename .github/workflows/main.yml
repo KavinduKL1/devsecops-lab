@@ -4,31 +4,42 @@ on:
   push:
     branches: [ "main" ]
 
+# GitHub එකට අවසර දීම (Permissions)
+permissions:
+  contents: read
+  issues: write 
+  checks: write
+
 jobs:
   build-and-secure:
     runs-on: ubuntu-latest
 
     steps:
+    # 1. Code එක GitHub එකෙන් අපේ මැෂින් එකට ගන්නවා
     - name: Checkout Code
       uses: actions/checkout@v3
 
+    # 2. Python පරිසරය සකස් කරනවා (Version 3.9)
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
+    # 3. අවශ්‍ය මෘදුකාංග (Dependencies) Install කරනවා
     - name: Install Dependencies
       run: |
         pip install bandit
         pip install -r requirements.txt
 
+    # 4. Bandit Scan (SAST) - Code එකේ වැරදි බලනවා
     - name: Run Bandit Security Scan
       run: bandit -r .
 
+    # 5. Docker Image එක හදනවා (Build)
     - name: Build Docker Image
       run: docker build -t my-secure-app:${{ github.sha }} .
 
-    # Trivy Scan (Severity: CRITICAL,HIGH විතරයි)
+    # 6. Trivy Scan (Container Security) - OS එකේ භයානක වැරදි බලනවා
     - name: Run Trivy Vulnerability Scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -39,23 +50,28 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-    # App එක Run කිරීම
+    # 7. Docker Network එකක් හදමු (Container දෙක යාළු කරන්න)
+    # මේකෙන් තමයි ZAP එකටයි App එකටයි කතා කරන්න පුළුවන් වෙන්නේ
+    - name: Create Docker Network
+      run: docker network create devsecops-net
+
+    # 8. App එක Run කරනවා (Network එකට දාලා)
     - name: Run Docker Container
       run: |
-        # App එක Run කරනවා (Port 5000)
-        docker run -d --name test-app -p 5000:5000 my-secure-app:${{ github.sha }}
-        sleep 20  # App එක start වෙනකම් ඉන්නවා
+        # --network: අපි හදපු Network එකට App එක සම්බන්ධ කරනවා
+        # --name: App එකට "test-app" කියලා නමක් දෙනවා (ZAP එකට හොයාගන්න ලේසි වෙන්න)
+        docker run -d --network devsecops-net --name test-app my-secure-app:${{ github.sha }}
+        sleep 20  # App එක start වෙනකම් තත්පර 20ක් ඉන්නවා
 
-    # ZAP Scan (Manual Docker Run - The Fix!)
+    # 9. ZAP Scan (DAST) - Network එක හරහා පහර දීලා බලනවා
     - name: Run ZAP Security Scan
       run: |
-        # 1. ZAP වලට ලියන්න අවසර දෙනවා (Fix Permission Denied)
+        # Report එක ලියන්න Folder එකට අවසර දෙනවා
         chmod -R 777 .
         
-        # 2. අලුත් ZAP image එක ගන්නවා
+        # ZAP Tool එක Download කරගන්නවා
         docker pull zaproxy/zap-stable
         
-        # 3. ZAP Run කරනවා (Network Host දාලා)
-        # --network host: මේකෙන් Connection Refused ප්‍රශ්නේ විසඳෙනවා
-        # -I: Warnings තිබ්බට Fail කරන්න එපා කියනවා
-        docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true
+        # ZAP එක Run කරනවා (අර Network එකටම දාලා)
+        # Target: http://test-app:5000 (දැන් localhost ඕන නෑ, නම පාවිච්චි කරන්න පුළුවන්)
+        docker run --network devsecops-net -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://test-app:5000 -I || true
