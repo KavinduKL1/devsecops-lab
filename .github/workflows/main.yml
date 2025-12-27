@@ -45,24 +45,21 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-    # 7. App එක Run කිරීම
+# 7. App එක Run කිරීම (Standard Bridge Mode)
     - name: Run Docker Container
       run: |
-        docker run -d --network host --name test-app my-secure-app:${{ github.sha }}
+        # -p 5000:5000 දාපු ගමන් App එකේ Port එක කෙලින්ම එළියට එනවා
+        docker run -d -p 5000:5000 --name test-app my-secure-app:${{ github.sha }}
         sleep 15
+        
+        # App එක වැඩද බලන්න Check එකක්
+        echo "Testing connection..."
+        curl -v http://localhost:5000 || echo "WARNING: App connection failed!"
 
-    # Debug Step (App එක වැඩද බලන්න)
-    - name: Debug Application Status
-      run: |
-        echo "=== Container Logs ==="
-        docker logs test-app
-        echo "=== Testing Connection ==="
-        curl -v http://localhost:5000 || echo "App is NOT reachable!"
-
-    # 8. ZAP Scan (Host Network - The Final Fix)
+    # 8. ZAP Scan (Host Network Mode)
     - name: Run ZAP Security Scan
       run: |
         chmod -R 777 .
         docker pull zaproxy/zap-stable
-        # App එක වැඩ නම් විතරක් Scan කරන්න
+        # ZAP එක Host Network එකේ දුවන නිසා, එයාට අර එළියට දාපු Port 5000 පේනවා
         docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true
