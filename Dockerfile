@@ -1,20 +1,22 @@
+# Alpine කියන ආරක්ෂිත Base Image එක පාවිච්චි කරමු
 FROM python:3.9-alpine
 
+# වැඩ කරන ෆෝල්ඩර් එක හදමු
 WORKDIR /app
 
-# 1. ආරක්ෂිත පියවර: අලුත් User කෙනෙක් හදනවා 'appuser' කියලා
-# (System user කෙනෙක්, Password ඕන නෑ)
-RUN useradd -m -r appuser
+# ෆයිල් ටික Copy කරමු
+COPY . /app
 
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+# Python කෑලි Install කරමු
+# (--no-cache-dir දාන්නේ Image එකේ සයිස් එක අඩු කරන්න)
+RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py .
+# ආරක්ෂාවට Root නැති පොඩි User කෙනෙක් හදමු
+# (Alpine වල useradd වෙනුවට පාවිච්චි වෙන්නේ adduser -D)
+RUN adduser -D appuser
 
-# 2. වැදගත්ම තැන: ලිපිගොනු වල අයිතිය අර අලුත් User ට පවරනවා
-RUN chown -R appuser:appuser /app
-
-# 3. මෙතනින් පස්සේ වැඩ කරන හැමදේම 'appuser' විදියට කරන්න කියලා අණ කරනවා (Root තහනම්)
+# ඒ User ට මාරු වෙමු
 USER appuser
 
+# App එක Run කරමු
 CMD ["python", "app.py"]
