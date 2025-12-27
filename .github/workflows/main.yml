@@ -47,19 +47,24 @@ jobs:
     - name: Run Docker Container
       run: |
         docker run -d --network host --name test-app my-secure-app:${{ github.sha }}
-        sleep 10 
+        sleep 15  # තත්පර 15ක් ඉමු
 
-    # --- අලුත් කොටස (Debug) ---
-    - name: Check App Status
+    # --- අලුත් කොටස: ලෙඩේ හොයන CCTV එක ---
+    - name: Debug Application Status
       run: |
-        echo "--- Container Status ---"
-        docker ps -a  # Container එක මැරිලද බලන්න
-        echo "--- Container Logs ---"
-        docker logs test-app  # ඇතුලේ වුනේ මොකක්ද බලන්න
+        echo "=== 1. Container Status ==="
+        docker ps -a
+        
+        echo "=== 2. App Logs (ඇයි මැරුණේ?) ==="
+        docker logs test-app
+        
+        echo "=== 3. Testing Connection ==="
+        curl -v http://localhost:5000 || echo "WARNING: App is NOT reachable!"
 
     # 8. ZAP Scan (Host Network)
     - name: Run ZAP Security Scan
       run: |
         chmod -R 777 .
         docker pull zaproxy/zap-stable
+        # App එක වැඩ නම් විතරක් Scan කරන්න
         docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true
