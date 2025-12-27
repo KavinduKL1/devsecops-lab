@@ -4,7 +4,6 @@ on:
   push:
     branches: [ "main" ]
 
-# GitHub එකට අවසර දීම (Permissions)
 permissions:
   contents: read
   issues: write 
@@ -15,31 +14,25 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Code එක GitHub එකෙන් අපේ මැෂින් එකට ගන්නවා
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    # 2. Python පරිසරය සකස් කරනවා (Version 3.9)
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: '3.9'
 
-    # 3. අවශ්‍ය මෘදුකාංග (Dependencies) Install කරනවා
     - name: Install Dependencies
       run: |
         pip install bandit
         pip install -r requirements.txt
 
-    # 4. Bandit Scan (SAST) - Code එකේ වැරදි බලනවා
     - name: Run Bandit Security Scan
       run: bandit -r .
 
-    # 5. Docker Image එක හදනවා (Build)
     - name: Build Docker Image
       run: docker build -t my-secure-app:${{ github.sha }} .
 
-    # 6. Trivy Scan (Container Security) - OS එකේ භයානක වැරදි බලනවා
     - name: Run Trivy Vulnerability Scanner
       uses: aquasecurity/trivy-action@master
       with:
@@ -50,28 +43,26 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-    # 7. Docker Network එකක් හදමු (Container දෙක යාළු කරන්න)
-    # මේකෙන් තමයි ZAP එකටයි App එකටයි කතා කරන්න පුළුවන් වෙන්නේ
+    # 7. Docker Network එක හදනවා
     - name: Create Docker Network
       run: docker network create devsecops-net
 
-    # 8. App එක Run කරනවා (Network එකට දාලා)
+    # 8. App එක Run කරනවා
     - name: Run Docker Container
       run: |
-        # --network: අපි හදපු Network එකට App එක සම්බන්ධ කරනවා
-        # --name: App එකට "test-app" කියලා නමක් දෙනවා (ZAP එකට හොයාගන්න ලේසි වෙන්න)
         docker run -d --network devsecops-net --name test-app my-secure-app:${{ github.sha }}
-        sleep 20  # App එක start වෙනකම් තත්පර 20ක් ඉන්නවා
+        sleep 20
 
-    # 9. ZAP Scan (DAST) - Network එක හරහා පහර දීලා බලනවා
+    # 9. ZAP Scan (Direct IP Attack Method)
+    # නම (DNS) වැඩ නැති නිසා අපි කෙලින්ම IP එක හොයාගෙන ගහනවා.
     - name: Run ZAP Security Scan
       run: |
-        # Report එක ලියන්න Folder එකට අවසර දෙනවා
         chmod -R 777 .
-        
-        # ZAP Tool එක Download කරගන්නවා
         docker pull zaproxy/zap-stable
         
-        # ZAP එක Run කරනවා (අර Network එකටම දාලා)
-        # Target: http://test-app:5000 (දැන් localhost ඕන නෑ, නම පාවිච්චි කරන්න පුළුවන්)
-        docker run --network devsecops-net -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://test-app:5000 -I || true
+        # App එකේ IP ලිපිනය හොයාගන්නවා (IP Extraction)
+        APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' test-app)
+        echo "Scanning Target IP: $APP_IP"
+        
+        # ඒ IP එකට Scan කරනවා
+        docker run --network devsecops-net -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://$APP_IP:5000 -I || true
