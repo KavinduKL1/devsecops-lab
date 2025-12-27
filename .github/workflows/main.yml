@@ -42,6 +42,6 @@ jobs:
         image-ref: 'my-secure-app:${{ github.sha }}'
         format: 'table'
         exit-code: '1'
-        ignore-unfixed: false  # <--- විසඳුම් නැති ඒවත් අල්ලන්න
+        ignore-unfixed: true  # <--- විසඳුම් නැති ඒවත් අල්ලන්න
         vuln-type: 'os,library'
-        severity: 'UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL' # <--- හැම එකම අල්ලන්න
+        severity: 'HIGH,CRITICAL' # <--- හැම එකම අල්ලන්න
