@@ -45,3 +45,17 @@ jobs:
         ignore-unfixed: true  # <--- විසඳුම් නැති ඒවත් අල්ලන්න
         vuln-type: 'os,library'
         severity: 'HIGH,CRITICAL' # <--- හැම එකම අල්ලන්න
+
+# 7. App එක Run කරමු (Testing සඳහා)
+    - name: Run Docker Container
+      run: |
+        docker run -d --name test-app -p 5000:5000 my-secure-app:${{ github.sha }}
+        sleep 10  # App එක Start වෙනකම් තත්පර 10ක් ඉමු
+
+    # 8. OWASP ZAP Scan (DAST) - Hacker කෙනෙක් වගේ පහර දෙමු!
+    - name: OWASP ZAP Baseline Scan
+      uses: zaproxy/action-baseline@v0.7.0
+      with:
+        target: 'http://localhost:5000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'  # (Optional) සැර වැඩි කරන්න
