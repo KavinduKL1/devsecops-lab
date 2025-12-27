@@ -45,21 +45,26 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
 
-# 7. App එක Run කිරීම (Standard Bridge Mode)
+# 7. App එක Run කිරීම
     - name: Run Docker Container
       run: |
-        # -p 5000:5000 දාපු ගමන් App එකේ Port එක කෙලින්ම එළියට එනවා
-        docker run -d -p 5000:5000 --name test-app my-secure-app:${{ github.sha }}
-        sleep 15
+        docker run -d --name test-app my-secure-app:${{ github.sha }}
         
-        # App එක වැඩද බලන්න Check එකක්
-        echo "Testing connection..."
-        curl -v http://localhost:5000 || echo "WARNING: App connection failed!"
-
-    # 8. ZAP Scan (Host Network Mode)
+    # 8. ZAP Scan (IP Address Method - The 100% Fix)
     - name: Run ZAP Security Scan
       run: |
+        # 1. Permission හදනවා
         chmod -R 777 .
+        
+        # 2. App එකේ IP එක හොයාගන්නවා (IP Extraction)
+        APP_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' test-app)
+        echo "Detected App IP: $APP_IP"
+        
+        # 3. App එක Start වෙනකම් පොඩ්ඩක් ඉන්නවා (Wait Loop)
+        echo "Waiting for App to start..."
+        timeout 30s bash -c "until curl -s http://$APP_IP:5000 > /dev/null; do echo waiting...; sleep 5; done"
+        
+        # 4. දැන් කෙලින්ම IP එකට පහර දෙනවා
+        echo "Starting ZAP Scan against http://$APP_IP:5000"
         docker pull zaproxy/zap-stable
-        # ZAP එක Host Network එකේ දුවන නිසා, එයාට අර එළියට දාපු Port 5000 පේනවා
-        docker run --network host -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://localhost:5000 -I || true
+        docker run -v $(pwd):/zap/wrk:rw -t zaproxy/zap-stable zap-baseline.py -t http://$APP_IP:5000 -I || true
