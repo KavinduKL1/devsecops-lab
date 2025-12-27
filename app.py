@@ -6,6 +6,6 @@ app = Flask(__name__)
 def home():
     return "Hello, DevSecOps!"
 
-if __name__ == '__main__':
-    # host='0.0.0.0' කියන්නේ ඕනම කෙනෙක්ට එන්න දොර අරින්න කියන එකයි
-    app.run(debug=True, host='0.0.0.0', port=5000) # nosec
+# IF කෑලි ඕන නෑ, කෙලින්ම Run කරන්න කියමු.
+# එතකොට Indentation වරදින්න විදියක් නෑ.
+app.run(debug=True, host='0.0.0.0', port=5000) # nosec
