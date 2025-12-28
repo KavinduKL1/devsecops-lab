@@ -20,7 +20,7 @@ graph TD
         Deps --> SAST[Bandit SAST Scan]
         SAST --> Build[Build Docker Image]
         Build --> SCA[Trivy Image Scan]
-        SCA --> Run[Run App (Host Network)]
+        SCA --> Run["Run App (Host Network)"]
         Run --> DAST[OWASP ZAP Attack]
     end
 
