@@ -9,12 +9,22 @@
 This project demonstrates a fully automated **Secure CI/CD Pipeline** designed for a Python Flask application. It integrates **System Engineering** principles with **DevOps Automation** to ensure code quality, infrastructure security, and runtime protection.
 
 ## 🏗️ Architecture
-The pipeline performs the following automated checks on every commit:
+```mermaid
+graph TD
+    User[Developer] -->|Push Code| GitHub[GitHub Repository]
+    GitHub -->|Trigger| Actions[GitHub Actions Runner]
 
-1.  **Build Stage:** Docker Image creation with optimized `python:3.9-slim` base.
-2.  **SAST (Static Analysis):** Scans Python code for vulnerabilities using **Bandit**.
-3.  **SCA (Container Security):** Scans the Docker OS for CVEs using **Trivy**.
-4.  **DAST (Dynamic Analysis):** Attacks the running application using **OWASP ZAP** to find runtime issues.
+    subgraph Pipeline [Automated DevSecOps Process]
+        direction TB
+        Actions --> Deps[Install Dependencies]
+        Deps --> SAST[Bandit SAST Scan]
+        SAST --> Build[Build Docker Image]
+        Build --> SCA[Trivy Image Scan]
+        SCA --> Run[Run App (Host Network)]
+        Run --> DAST[OWASP ZAP Attack]
+    end
+
+    DAST -->|Success| Green[Pipeline Passed ✅]
 
 ## 🛠️ Tech Stack
 * **Version Control:** Git & GitHub
