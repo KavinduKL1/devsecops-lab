@@ -9,6 +9,7 @@
 This project demonstrates a fully automated **Secure CI/CD Pipeline** designed for a Python Flask application. It integrates **System Engineering** principles with **DevOps Automation** to ensure code quality, infrastructure security, and runtime protection.
 
 ## 🏗️ Architecture
+
 ```mermaid
 graph TD
     User[Developer] -->|Push Code| GitHub[GitHub Repository]
@@ -24,7 +25,11 @@ graph TD
         Run --> DAST[OWASP ZAP Attack]
     end
 
-    DAST -->|Success| Green[Pipeline Passed ✅]
+    DAST -->|Success| Green["Pipeline Passed ✅"]
+```
+
+
+
 
 ## 🛠️ Tech Stack
 * **Version Control:** Git & GitHub
