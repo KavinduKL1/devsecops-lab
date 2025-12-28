@@ -41,4 +41,4 @@ The `main.yml` workflow executes the following:
 * **Runtime Security:** Verified via ZAP baseline scan (Passing with waivers).
 
 ---
-*Created by KavinduKL1 - Aspiring System & DevOps Engineer*
+*Created by KavinduKL1 - System & DevOps Engineering Intern | DevSecOps Enthusiast*
